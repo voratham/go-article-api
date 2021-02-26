@@ -41,9 +41,13 @@ type articlesPaging struct {
 func (a *Articles) FineAll(ctx *gin.Context) {
 	var articles []models.Article
 
-	a.DB.Find(&articles)
+	pagination := pagination{
+		ctx:     ctx,
+		query:   a.DB,
+		records: &articles,
+	}
 
-	paging := pagingResource(ctx, a.DB, &articles)
+	paging := pagination.paginate()
 
 	var serializedArticles []articleResponse
 	copier.Copy(&serializedArticles, &articles)
