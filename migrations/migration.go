@@ -14,6 +14,7 @@ func Migrate() {
 		gormigrate.DefaultOptions,
 		[]*gormigrate.Migration{
 			// add script migration
+			m1614330748CreateArticlesTable(),
 		},
 	)
 
