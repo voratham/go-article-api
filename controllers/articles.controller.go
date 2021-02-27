@@ -129,6 +129,24 @@ func (a *Articles) Update(ctx *gin.Context) {
 
 }
 
+func (a *Articles) Delete(ctx *gin.Context) {
+
+	article, err := a.findArticleByID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	// It's not delete from database just stamp deleted_at soft delete
+	a.DB.Delete(&article)
+
+	// The syntax below will command execute delete from database hard delete
+	// a.DB.Unscoped().Delete(&article)
+
+	ctx.Status(http.StatusNoContent)
+
+}
+
 func (a *Articles) setArticleImage(ctx *gin.Context, article *models.Article) error {
 	file, err := ctx.FormFile("image")
 	if err != nil || file == nil {

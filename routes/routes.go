@@ -19,6 +19,7 @@ func Serve(r *gin.Engine) {
 		articlesGroup.GET("/:id", articlesControllers.FindById)
 		articlesGroup.PATCH("/:id", articlesControllers.Update)
 		articlesGroup.POST("", articlesControllers.Create)
+		articlesGroup.DELETE("/:id", articlesControllers.Delete)
 	}
 
 }
