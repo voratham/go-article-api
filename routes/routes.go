@@ -8,9 +8,11 @@ import (
 )
 
 func Serve(r *gin.Engine) {
-	db := config.GetDB()
-	articlesGroup := r.Group("/api/v1/articles")
 
+	db := config.GetDB()
+	v1 := r.Group("/api/v1")
+
+	articlesGroup := v1.Group("/articles")
 	// dependency inject with db to articles controller
 	articlesControllers := controllers.Articles{DB: db}
 
@@ -20,6 +22,17 @@ func Serve(r *gin.Engine) {
 		articlesGroup.PATCH("/:id", articlesControllers.Update)
 		articlesGroup.POST("", articlesControllers.Create)
 		articlesGroup.DELETE("/:id", articlesControllers.Delete)
+	}
+
+	categoriesGroup := v1.Group("/categories")
+	categoriesControllers := controllers.Categories{DB: db}
+
+	{
+		categoriesGroup.GET("", categoriesControllers.FindAll)
+		categoriesGroup.GET("/:id", categoriesControllers.FinById)
+		categoriesGroup.PATCH("/:id", categoriesControllers.Update)
+		categoriesGroup.POST("", categoriesControllers.Create)
+		categoriesGroup.DELETE("/:id", categoriesControllers.Delete)
 	}
 
 }
