@@ -25,6 +25,13 @@ type createArticleRequest struct {
 	Excerpt string                `form:"excerpt" binding:"required"`
 }
 
+type updateArticleRequest struct {
+	Title   string                `form:"title"`
+	Body    string                `form:"body"`
+	Image   *multipart.FileHeader `form:"image"`
+	Excerpt string                `form:"excerpt"`
+}
+
 type articleResponse struct {
 	ID      uint   `json:"id"`
 	Title   string `json:"title"`
@@ -57,6 +64,7 @@ func (a *Articles) FineAll(ctx *gin.Context) {
 
 func (a *Articles) FindById(ctx *gin.Context) {
 	article, err := a.findArticleByID(ctx)
+
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -87,6 +95,37 @@ func (a *Articles) Create(ctx *gin.Context) {
 	copier.Copy(&serializedArticle, &article)
 
 	ctx.JSON(http.StatusCreated, gin.H{"article": serializedArticle})
+
+}
+
+func (a *Articles) Update(ctx *gin.Context) {
+
+	var data updateArticleRequest
+
+	if err := ctx.ShouldBind(&data); err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	article, err := a.findArticleByID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	var articleUpdate models.Article
+	copier.Copy(&articleUpdate, &data)
+
+	if err := a.DB.Model(&article).Updates(&articleUpdate).Error; err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	a.setArticleImage(ctx, article)
+
+	var serializedArticle articleResponse
+	copier.Copy(&serializedArticle, article)
+	ctx.JSON(http.StatusOK, gin.H{"article": article})
 
 }
 
