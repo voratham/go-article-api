@@ -24,14 +24,23 @@ type updateCategoryRequest struct {
 }
 
 type categoryResponse struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	Desc     string `json:"desc"`
+	Articles []struct {
+		ID    uint   `json:"id"`
+		Title string `json:"title"`
+	} `json:"articles"`
+}
+
+type allCategoriesResponse struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
-	Desc string `json:"desc"`
 }
 
 type categoiresPaging struct {
-	Items  []categoryResponse `json:"items"`
-	Paging *pagingResult      `json:"paging"`
+	Items  []allCategoriesResponse `json:"items"`
+	Paging *pagingResult           `json:"paging"`
 }
 
 func (c *Categories) FindAll(ctx *gin.Context) {
@@ -45,9 +54,9 @@ func (c *Categories) FindAll(ctx *gin.Context) {
 
 	paging := pagination.paginate()
 
-	var serializedCategories []categoryResponse
-
+	var serializedCategories []allCategoriesResponse
 	copier.Copy(&serializedCategories, &categories)
+
 	ctx.JSON(http.StatusOK, gin.H{"categoires": categoiresPaging{Items: serializedCategories, Paging: paging}})
 }
 
@@ -134,7 +143,7 @@ func (c *Categories) findCategoryByID(ctx *gin.Context) (*models.Category, error
 	var category models.Category
 	id := ctx.Param("id")
 
-	if err := c.DB.First(&category, id).Error; err != nil {
+	if err := c.DB.Preload("Articles").First(&category, id).Error; err != nil {
 		return nil, err
 	}
 

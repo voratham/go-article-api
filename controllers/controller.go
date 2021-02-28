@@ -21,6 +21,7 @@ type pagination struct {
 	ctx     *gin.Context
 	query   *gorm.DB
 	records interface{}
+	preload *string
 }
 
 func (p *pagination) paginate() *pagingResult {
@@ -34,7 +35,14 @@ func (p *pagination) paginate() *pagingResult {
 	go p.countRecords(ch)
 
 	offset := (page - 1) * limit
-	p.query.Order(sortBy + " " + orderBy).Limit(limit).Offset(offset).Find(p.records)
+
+	var queryCompose *gorm.DB = p.query
+
+	if p.preload != nil {
+		queryCompose = p.query.Preload(*p.preload)
+	}
+
+	queryCompose.Order(sortBy + " " + orderBy).Limit(limit).Offset(offset).Find(p.records)
 
 	count := <-ch
 	totalPage := int(math.Ceil(float64(count) / float64(limit)))

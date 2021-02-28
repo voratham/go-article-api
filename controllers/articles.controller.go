@@ -19,44 +19,63 @@ type Articles struct {
 }
 
 type createArticleRequest struct {
-	Title   string                `form:"title" binding:"required"`
-	Body    string                `form:"body" binding:"required"`
-	Image   *multipart.FileHeader `form:"image" binding:"required"`
-	Excerpt string                `form:"excerpt" binding:"required"`
+	Title      string                `form:"title" binding:"required"`
+	Body       string                `form:"body" binding:"required"`
+	Image      *multipart.FileHeader `form:"image" binding:"required"`
+	Excerpt    string                `form:"excerpt" binding:"required"`
+	CategoryID uint                  `form:"categoryId" binding:"required"`
 }
 
 type updateArticleRequest struct {
-	Title   string                `form:"title"`
-	Body    string                `form:"body"`
-	Image   *multipart.FileHeader `form:"image"`
-	Excerpt string                `form:"excerpt"`
+	Title      string                `form:"title"`
+	Body       string                `form:"body"`
+	Image      *multipart.FileHeader `form:"image"`
+	Excerpt    string                `form:"excerpt"`
+	CategoryID uint                  `form:"categoryId"`
 }
 
 type articleResponse struct {
-	ID      uint   `json:"id"`
-	Title   string `json:"title"`
-	Excerpt string `json:"Excerpt"`
-	Body    string `json:"body"`
-	Image   string `json:"image"`
+	ID         uint   `json:"id"`
+	Title      string `json:"title"`
+	Excerpt    string `json:"Excerpt"`
+	Body       string `json:"body"`
+	Image      string `json:"image"`
+	CategoryID uint   `json:"categoryId"`
+}
+
+type articleAndCategoryResponse struct {
+	ID         uint   `json:"id"`
+	Title      string `json:"title"`
+	Excerpt    string `json:"Excerpt"`
+	Body       string `json:"body"`
+	Image      string `json:"image"`
+	CategoryID uint   `json:"categoryId"`
+	Category   struct {
+		ID   uint   `json:"id"`
+		Name string `json:"name"`
+	} `json:"category"`
 }
 
 type articlesPaging struct {
-	Items  []articleResponse `json:"items"`
-	Paging *pagingResult     `json:"paging"`
+	Items  []articleAndCategoryResponse `json:"items"`
+	Paging *pagingResult                `json:"paging"`
 }
 
 func (a *Articles) FineAll(ctx *gin.Context) {
 	var articles []models.Article
 
+	preload := "Category"
+
 	pagination := pagination{
 		ctx:     ctx,
 		query:   a.DB,
 		records: &articles,
+		preload: &preload,
 	}
 
 	paging := pagination.paginate()
 
-	var serializedArticles []articleResponse
+	var serializedArticles []articleAndCategoryResponse
 	copier.Copy(&serializedArticles, &articles)
 
 	ctx.JSON(http.StatusOK, gin.H{"articles": articlesPaging{Items: serializedArticles, Paging: paging}})
@@ -69,7 +88,7 @@ func (a *Articles) FindById(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	serializedArticle := articleResponse{}
+	serializedArticle := articleAndCategoryResponse{}
 	copier.Copy(&serializedArticle, &article)
 	ctx.JSON(http.StatusOK, gin.H{"article": serializedArticle})
 }
@@ -90,10 +109,8 @@ func (a *Articles) Create(ctx *gin.Context) {
 	}
 
 	a.setArticleImage(ctx, &article)
-
 	serializedArticle := articleResponse{}
 	copier.Copy(&serializedArticle, &article)
-
 	ctx.JSON(http.StatusCreated, gin.H{"article": serializedArticle})
 
 }
@@ -108,6 +125,7 @@ func (a *Articles) Update(ctx *gin.Context) {
 	}
 
 	article, err := a.findArticleByID(ctx)
+
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -124,8 +142,8 @@ func (a *Articles) Update(ctx *gin.Context) {
 	a.setArticleImage(ctx, article)
 
 	var serializedArticle articleResponse
-	copier.Copy(&serializedArticle, article)
-	ctx.JSON(http.StatusOK, gin.H{"article": article})
+	copier.Copy(&serializedArticle, &article)
+	ctx.JSON(http.StatusOK, gin.H{"article": serializedArticle})
 
 }
 
@@ -170,7 +188,9 @@ func (a *Articles) setArticleImage(ctx *gin.Context, article *models.Article) er
 	}
 
 	article.Image = os.Getenv("HOST") + "/" + filename
-	a.DB.Save(article)
+
+	// omit Category propertry because side-effect with updated categoryID
+	a.DB.Model(article).Omit("Category").Save(article)
 	return nil
 
 }
@@ -179,7 +199,7 @@ func (a *Articles) findArticleByID(ctx *gin.Context) (*models.Article, error) {
 	var article models.Article
 	id := ctx.Param("id")
 
-	if err := a.DB.First(&article, id).Error; err != nil {
+	if err := a.DB.Preload("Category").First(&article, id).Error; err != nil {
 		return nil, err
 	}
 
