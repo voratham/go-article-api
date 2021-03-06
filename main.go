@@ -21,8 +21,10 @@ func main() {
 
 	config.InitDB()
 	defer config.CloseDB()
-
 	migrations.Migrate()
+
+	// run first time when not data for play
+	// seed.Load()
 
 	r := gin.Default()
 
