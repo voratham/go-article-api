@@ -15,7 +15,7 @@ import (
 func Load() {
 	db := config.GetDB()
 
-	db.Migrator().DropTable("articles", "categories", "migrations")
+	db.Migrator().DropTable("articles", "categories", "users", "migrations")
 	migrations.Migrate()
 
 	// Add categories

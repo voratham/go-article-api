@@ -12,6 +12,12 @@ func Serve(r *gin.Engine) {
 	db := config.GetDB()
 	v1 := r.Group("/api/v1")
 
+	authenticateGroup := v1.Group("auth")
+	authenticateControllers := controllers.Auth{DB: db}
+	{
+		authenticateGroup.POST("/sign-up", authenticateControllers.Signup)
+	}
+
 	articlesGroup := v1.Group("/articles")
 	// dependency inject with db to articles controller
 	articlesControllers := controllers.Articles{DB: db}

@@ -13,6 +13,7 @@ require (
 	github.com/jinzhu/copier v0.2.4
 	github.com/joho/godotenv v1.3.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
 	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073 // indirect
 	gorm.io/driver/postgres v1.0.8
 	gorm.io/driver/sqlite v1.1.4
