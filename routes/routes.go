@@ -3,6 +3,7 @@ package routes
 import (
 	"article-api/config"
 	"article-api/controllers"
+	"article-api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,6 +17,7 @@ func Serve(r *gin.Engine) {
 	authenticateControllers := controllers.Auth{DB: db}
 	{
 		authenticateGroup.POST("/sign-up", authenticateControllers.Signup)
+		authenticateGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
 	}
 
 	articlesGroup := v1.Group("/articles")
