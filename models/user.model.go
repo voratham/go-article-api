@@ -13,14 +13,9 @@ type User struct {
 	Role     string `gorm:"default:'Member'; not null"`
 }
 
-func (u *User) BeforeSave(tx *gorm.DB) (err error) {
-
-	if u.Password == "" {
-		return
-	}
+func (u *User) GenerateEncryptedPassword() string {
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte(u.Password), 14)
+	return string(hash)
 
-	tx.Statement.SetColumn("password", string(hash))
-	return
 }
