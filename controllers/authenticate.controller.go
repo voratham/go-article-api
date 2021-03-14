@@ -23,6 +23,22 @@ type authResponse struct {
 	Email string `json:"email"`
 }
 
+type userResponse struct {
+	ID     uint   `json:"id"`
+	Email  string `json:"email"`
+	Avatar string `json:"avatar"`
+	Role   string `json:"role"`
+}
+
+func (a *Auth) GetProfile(ctx *gin.Context) {
+	var serializedUser userResponse
+	sub, _ := ctx.Get("sub")
+	user := sub.(*models.User)
+	copier.Copy(&serializedUser, &user)
+	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
+
+}
+
 func (a *Auth) Signup(ctx *gin.Context) {
 	var data authRequest
 	if err := ctx.ShouldBindJSON(&data); err != nil {

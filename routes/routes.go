@@ -18,6 +18,7 @@ func Serve(r *gin.Engine) {
 	{
 		authenticateGroup.POST("/sign-up", authenticateControllers.Signup)
 		authenticateGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
+		authenticateGroup.GET("/profile", middleware.Authenticate().MiddlewareFunc(), authenticateControllers.GetProfile)
 	}
 
 	articlesGroup := v1.Group("/articles")

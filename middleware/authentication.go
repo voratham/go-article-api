@@ -28,6 +28,24 @@ func Authenticate() *jwt.GinJWTMiddleware {
 
 		IdentityKey: indentityKey,
 
+		TokenLookup:   "header: Authorization",
+		TokenHeadName: "Bearer",
+		IdentityHandler: func(c *gin.Context) interface{} {
+			var user models.User
+			claims := jwt.ExtractClaims(c)
+			id := claims[indentityKey]
+
+			db := config.GetDB()
+			err := db.First(&user, uint(id.(float64))).Error
+
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Fatal("error middleware authenticate ", err)
+				return nil
+			}
+
+			return &user
+		},
+
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var data login
 			var user models.User
