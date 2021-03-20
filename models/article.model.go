@@ -11,4 +11,6 @@ type Article struct {
 	CategoryID int
 	// gorm library checking foreignKey has on category table
 	Category Category `gorm:"foreignKey:CategoryID"`
+	UserID   uint
+	User     User
 }

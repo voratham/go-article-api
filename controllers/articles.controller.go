@@ -41,9 +41,10 @@ type articleResponse struct {
 	Body       string `json:"body"`
 	Image      string `json:"image"`
 	CategoryID uint   `json:"categoryId"`
+	UserID     uint   `json:"userId"`
 }
 
-type articleAndCategoryResponse struct {
+type articleInformationResponse struct {
 	ID         uint   `json:"id"`
 	Title      string `json:"title"`
 	Excerpt    string `json:"Excerpt"`
@@ -54,17 +55,21 @@ type articleAndCategoryResponse struct {
 		ID   uint   `json:"id"`
 		Name string `json:"name"`
 	} `json:"category"`
+	User struct {
+		Name   string `json:"name"`
+		Avatar string `json:"avatar"`
+	} `json:"user"`
 }
 
 type articlesPaging struct {
-	Items  []articleAndCategoryResponse `json:"items"`
+	Items  []articleInformationResponse `json:"items"`
 	Paging *pagingResult                `json:"paging"`
 }
 
 func (a *Articles) FineAll(ctx *gin.Context) {
 	var articles []models.Article
 
-	preload := "Category"
+	preload := "Category,User"
 
 	pagination := pagination{
 		ctx:     ctx,
@@ -75,7 +80,7 @@ func (a *Articles) FineAll(ctx *gin.Context) {
 
 	paging := pagination.paginate()
 
-	var serializedArticles []articleAndCategoryResponse
+	var serializedArticles []articleInformationResponse
 	copier.Copy(&serializedArticles, &articles)
 
 	ctx.JSON(http.StatusOK, gin.H{"articles": articlesPaging{Items: serializedArticles, Paging: paging}})
@@ -88,7 +93,7 @@ func (a *Articles) FindById(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	serializedArticle := articleAndCategoryResponse{}
+	serializedArticle := articleInformationResponse{}
 	copier.Copy(&serializedArticle, &article)
 	ctx.JSON(http.StatusOK, gin.H{"article": serializedArticle})
 }
@@ -101,7 +106,9 @@ func (a *Articles) Create(ctx *gin.Context) {
 	}
 
 	var article models.Article
+	user, _ := ctx.Get("sub")
 	copier.Copy(&article, &data)
+	article.User = *user.(*models.User)
 
 	if err := a.DB.Create(&article).Error; err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
@@ -199,7 +206,7 @@ func (a *Articles) findArticleByID(ctx *gin.Context) (*models.Article, error) {
 	var article models.Article
 	id := ctx.Param("id")
 
-	if err := a.DB.Preload("Category").First(&article, id).Error; err != nil {
+	if err := a.DB.Preload("User").Preload("Category").First(&article, id).Error; err != nil {
 		return nil, err
 	}
 

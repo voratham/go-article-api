@@ -65,7 +65,7 @@ func (a *Auth) UpdateProfile(ctx *gin.Context) {
 	var userUpdate models.User
 	copier.Copy(&userUpdate, &data)
 
-	if err := a.DB.Model(&user).Updates(&data).Error; err != nil {
+	if err := a.DB.Model(&user).Updates(&userUpdate).Error; err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 	}
 
