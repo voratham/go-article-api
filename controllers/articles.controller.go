@@ -183,7 +183,7 @@ func (a *Articles) setArticleImage(ctx *gin.Context, article *models.Article) er
 
 	filename := path + "/" + file.Filename
 	if err := ctx.SaveUploadedFile(file, filename); err != nil {
-		log.Fatal("Fail to up load image")
+		log.Fatal("Fail to upload image")
 		return err
 	}
 

@@ -3,6 +3,7 @@ package routes
 import (
 	"article-api/config"
 	"article-api/controllers"
+	"article-api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,15 @@ func Serve(r *gin.Engine) {
 
 	db := config.GetDB()
 	v1 := r.Group("/api/v1")
+
+	authenticateGroup := v1.Group("auth")
+	authenticateControllers := controllers.Auth{DB: db}
+	{
+		authenticateGroup.POST("/sign-up", authenticateControllers.Signup)
+		authenticateGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
+		authenticateGroup.GET("/profile", middleware.Authenticate().MiddlewareFunc(), authenticateControllers.GetProfile)
+		authenticateGroup.PATCH("/profile", middleware.Authenticate().MiddlewareFunc(), authenticateControllers.UpdateProfile)
+	}
 
 	articlesGroup := v1.Group("/articles")
 	// dependency inject with db to articles controller
