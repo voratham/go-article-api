@@ -19,6 +19,7 @@ func Serve(r *gin.Engine) {
 		authenticateGroup.POST("/sign-up", authenticateControllers.Signup)
 		authenticateGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
 		authenticateGroup.GET("/profile", middleware.Authenticate().MiddlewareFunc(), authenticateControllers.GetProfile)
+		authenticateGroup.PATCH("/profile", middleware.Authenticate().MiddlewareFunc(), authenticateControllers.UpdateProfile)
 	}
 
 	articlesGroup := v1.Group("/articles")
