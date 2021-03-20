@@ -30,7 +30,7 @@ func Serve(r *gin.Engine) {
 		articlesGroup.GET("", articlesControllers.FineAll)
 		articlesGroup.GET("/:id", articlesControllers.FindById)
 		articlesGroup.PATCH("/:id", articlesControllers.Update)
-		articlesGroup.POST("", articlesControllers.Create)
+		articlesGroup.POST("", middleware.Authenticate().MiddlewareFunc(), articlesControllers.Create)
 		articlesGroup.DELETE("/:id", articlesControllers.Delete)
 	}
 

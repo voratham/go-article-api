@@ -3,6 +3,7 @@ package controllers
 import (
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -39,7 +40,11 @@ func (p *pagination) paginate() *pagingResult {
 	var queryCompose *gorm.DB = p.query
 
 	if p.preload != nil {
-		queryCompose = p.query.Preload(*p.preload)
+
+		preloads := strings.Split(*p.preload, ",")
+		for _, preload := range preloads {
+			queryCompose = queryCompose.Preload(preload)
+		}
 	}
 
 	queryCompose.Order(sortBy + " " + orderBy).Limit(limit).Offset(offset).Find(p.records)
