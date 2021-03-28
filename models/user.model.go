@@ -14,9 +14,15 @@ type User struct {
 	Role     string `gorm:"default:'Member'; not null"`
 }
 
-func (u *User) GenerateEncryptedPassword() string {
+func (u *User) Promote() {
+	u.Role = "Editor"
+}
 
+func (u *User) Demote() {
+	u.Role = "Member"
+}
+
+func (u *User) GenerateEncryptedPassword() string {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(u.Password), 14)
 	return string(hash)
-
 }

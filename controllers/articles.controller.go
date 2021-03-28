@@ -93,7 +93,7 @@ func (a *Articles) FindById(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	serializedArticle := articleInformationResponse{}
+	var serializedArticle articleInformationResponse
 	copier.Copy(&serializedArticle, &article)
 	ctx.JSON(http.StatusOK, gin.H{"article": serializedArticle})
 }
