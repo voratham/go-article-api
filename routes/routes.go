@@ -14,6 +14,7 @@ func Serve(r *gin.Engine) {
 	v1 := r.Group("/api/v1")
 
 	authenticateMiddleware := middleware.Authenticate().MiddlewareFunc()
+	authorizeMiddleware := middleware.Authorize()
 
 	authenticateGroup := v1.Group("auth")
 	authenticateControllers := controllers.Auth{DB: db}
@@ -25,7 +26,7 @@ func Serve(r *gin.Engine) {
 	}
 
 	usersGroup := v1.Group("/users")
-	usersGroup.Use(authenticateMiddleware)
+	usersGroup.Use(authenticateMiddleware, authorizeMiddleware)
 	usersControllers := controllers.Users{DB: db}
 	{
 		usersGroup.GET("", usersControllers.FineAll)
@@ -37,24 +38,28 @@ func Serve(r *gin.Engine) {
 		usersGroup.DELETE("/:id", usersControllers.Delete)
 	}
 
-	articlesGroup := v1.Group("/articles")
-	// dependency inject with db to articles controller
+	// Dependency inject with db to articles controller
 	articlesControllers := controllers.Articles{DB: db}
+	articlesGroup := v1.Group("/articles")
 
+	// reason add code here because "articlesGroup.use " middleware process route on bracket "{}"" only
+	articlesGroup.GET("", articlesControllers.FineAll)
+	articlesGroup.GET("/:id", articlesControllers.FindById)
+
+	articlesGroup.Use(authenticateMiddleware, authorizeMiddleware)
 	{
-		articlesGroup.GET("", articlesControllers.FineAll)
-		articlesGroup.GET("/:id", articlesControllers.FindById)
 		articlesGroup.PATCH("/:id", articlesControllers.Update)
 		articlesGroup.POST("", middleware.Authenticate().MiddlewareFunc(), articlesControllers.Create)
 		articlesGroup.DELETE("/:id", articlesControllers.Delete)
 	}
 
-	categoriesGroup := v1.Group("/categories")
 	categoriesControllers := controllers.Categories{DB: db}
-
+	categoriesGroup := v1.Group("/categories")
+	categoriesGroup.GET("", categoriesControllers.FindAll)
+	categoriesGroup.GET("/:id", categoriesControllers.FinById)
+	categoriesGroup.Use(authenticateMiddleware, authorizeMiddleware)
 	{
-		categoriesGroup.GET("", categoriesControllers.FindAll)
-		categoriesGroup.GET("/:id", categoriesControllers.FinById)
+
 		categoriesGroup.PATCH("/:id", categoriesControllers.Update)
 		categoriesGroup.POST("", categoriesControllers.Create)
 		categoriesGroup.DELETE("/:id", categoriesControllers.Delete)
