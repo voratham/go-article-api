@@ -7,16 +7,17 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env")
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env")
+		}
 	}
 
 	config.InitDB()
@@ -26,7 +27,12 @@ func main() {
 	// run first time when not data for play
 	// seed.Load()
 
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AddAllowHeaders("Authorization")
+
 	r := gin.Default()
+	r.Use(cors.New(corsConfig))
 
 	r.Static("/uploads", "./uploads")
 
