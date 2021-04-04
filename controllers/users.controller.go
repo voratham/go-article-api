@@ -46,15 +46,24 @@ type usersPaging struct {
 func (u *Users) FineAll(ctx *gin.Context) {
 	var users []models.User
 
+	term := ctx.Query("term")
+
+	filter := map[string]string{}
+
+	if term != "" {
+		filter["name ILIKE ?"] = "%" + term + "%"
+	}
+
 	pagination := pagination{
 		ctx:     ctx,
 		query:   u.DB,
 		records: &users,
+		filter:  &filter,
 	}
 
 	paging := pagination.paginate()
 
-	var serializedUsers []userResponse
+	serializedUsers := []userResponse{}
 	copier.Copy(&serializedUsers, &users)
 
 	ctx.JSON(http.StatusOK, gin.H{"users": usersPaging{Items: serializedUsers, Paging: paging}})

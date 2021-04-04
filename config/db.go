@@ -18,12 +18,10 @@ func InitDB() {
 	var err error
 	var logLevel logger.LogLevel
 
-	log.Println("gin.Mode :", gin.Mode())
-
 	if gin.Mode() == gin.DebugMode {
 		logLevel = logger.Info
 	} else {
-		logLevel = logger.Error
+		logLevel = logger.Silent
 	}
 
 	baseURI := os.Getenv("DB_CONNECTION")

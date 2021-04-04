@@ -23,6 +23,7 @@ type pagination struct {
 	query   *gorm.DB
 	records interface{}
 	preload *string
+	filter  *map[string]string
 }
 
 func (p *pagination) paginate() *pagingResult {
@@ -44,6 +45,12 @@ func (p *pagination) paginate() *pagingResult {
 		preloads := strings.Split(*p.preload, ",")
 		for _, preload := range preloads {
 			queryCompose = queryCompose.Preload(preload)
+		}
+	}
+
+	if len(*p.filter) > 0 {
+		for k, v := range *p.filter {
+			queryCompose = queryCompose.Where(k, v)
 		}
 	}
 

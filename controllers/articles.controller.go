@@ -69,6 +69,19 @@ type articlesPaging struct {
 func (a *Articles) FineAll(ctx *gin.Context) {
 	var articles []models.Article
 
+	categoryId := ctx.Query("categoryId")
+	term := ctx.Query("term")
+
+	filter := map[string]string{}
+
+	if categoryId != "" {
+		filter["category_id = ?"] = categoryId
+	}
+
+	if term != "" {
+		filter["title ILIKE ?"] = "%" + term + "%"
+	}
+
 	preload := "Category,User"
 
 	pagination := pagination{
@@ -76,11 +89,12 @@ func (a *Articles) FineAll(ctx *gin.Context) {
 		query:   a.DB,
 		records: &articles,
 		preload: &preload,
+		filter:  &filter,
 	}
 
 	paging := pagination.paginate()
 
-	var serializedArticles []articleInformationResponse
+	serializedArticles := []articleInformationResponse{}
 	copier.Copy(&serializedArticles, &articles)
 
 	ctx.JSON(http.StatusOK, gin.H{"articles": articlesPaging{Items: serializedArticles, Paging: paging}})
